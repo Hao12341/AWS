@@ -34,11 +34,14 @@ fileInput.addEventListener('change', async (event) => {
 
         try {
             // Subir la imagen a la carpeta "images/" del bucket de S3
-            const response = await fetch(`${s3BucketUrl}/${imagePrefix}${fileName}`, {
+            const response = await fetch(`https://proyecto-hao.s3.amazonaws.com/${imagePrefix}${fileName}`, {
                 method: 'PUT',
-                body: formData,
+                body: file, // Solo el archivo, no se necesita FormData
                 headers: {
-                    // Aquí puedes agregar cualquier header necesario para la autenticación si es necesario
+                    // Si no necesitas autenticación o credenciales adicionales, puedes omitir los headers
+                    // Si la autenticación es necesaria, deberías incluir las cabeceras adecuadas, por ejemplo:
+                    // 'Authorization': 'Bearer token',
+                    // 'x-amz-acl': 'public-read' (si se requiere acceso público)
                 }
             });
 
