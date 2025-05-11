@@ -7,16 +7,20 @@
         body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
         #preview { max-width: 100%; margin-top: 1rem; }
         #resultado { margin-top: 2rem; white-space: pre-wrap; background: #f0f0f0; padding: 1rem; border-radius: 8px; }
+        #loading { display: none; font-size: 1.2rem; color: #007BFF; margin-top: 1rem; }
     </style>
 </head>
 <body>
     <h1>Sube una imagen</h1>
 
     <input type="file" id="fileInput" accept="image/*"><br>
+    <button id="uploadButton" disabled>Subir imagen</button> <!-- Botón para subir la imagen -->
     <img id="preview" src="" alt="Vista previa" hidden>
 
     <h2>Resultado del análisis</h2>
     <div id="resultado">Sube una imagen y consulta el JSON desde S3.</div>
+
+    <div id="loading">Cargando, por favor espera...</div> <!-- Mensaje de carga -->
 
     <script src="script.js"></script>
 </body>
