@@ -10,7 +10,14 @@ def lambda_handler(event, context):
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = event['Records'][0]['s3']['object']['key']
     
-    # Intentar detectar texto
+    # Asegurarse de que el archivo venga de la carpeta imagenes/
+    if not key.startswith("images/"):
+        return {
+            'statusCode': 400,
+            'body': 'El archivo no está en la carpeta imagenes/.'
+        }
+
+    # Procesar con Rekognition - detectar texto
     text_response = rekognition.detect_text(
         Image={'S3Object': {'Bucket': bucket, 'Name': key}}
     )
@@ -21,14 +28,13 @@ def lambda_handler(event, context):
         if item['Type'] == 'LINE'
     ]
     
-    # Preparar datos de salida
+    # Si no hay texto, buscar etiquetas
     if detected_text:
         report_data = {
             "tipo": "texto",
             "resultado": detected_text
         }
     else:
-        # Si no hay texto, buscar etiquetas (objetos/personas)
         label_response = rekognition.detect_labels(
             Image={'S3Object': {'Bucket': bucket, 'Name': key}},
             MaxLabels=10,
@@ -43,9 +49,11 @@ def lambda_handler(event, context):
             "resultado": etiquetas
         }
     
-    # Guardar como archivo JSON
-    report_key = "reportes/" + os.path.splitext(key)[0] + ".json"
+    # Crear ruta para json/ usando el nombre base del archivo sin extensión
+    filename = os.path.splitext(os.path.basename(key))[0]
+    report_key = f"json/{filename}.json"
     
+    # Subir resultado a S3
     s3.put_object(
         Bucket=bucket,
         Key=report_key,
@@ -55,5 +63,5 @@ def lambda_handler(event, context):
     
     return {
         'statusCode': 200,
-        'body': f"Reporte generado en formato JSON: s3://{bucket}/{report_key}"
+        'body': f"Reporte JSON generado: s3://{bucket}/{report_key}"
     }
