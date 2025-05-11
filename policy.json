@@ -4,19 +4,10 @@
         {
             "Effect": "Allow",
             "Principal": "*",
-            "Action": "s3:PutObject",
+            "Action": ["s3:PutObject", "s3:GetObject"],
             "Resource": [
-                "arn:aws:s3:::tu-bucket/images/*",
-                "arn:aws:s3:::tu-bucket/json/*"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": [
-                "arn:aws:s3:::tu-bucket/images/*",
-                "arn:aws:s3:::tu-bucket/json/*"
+                "arn:aws:s3:::proyecto-hao/images/*",
+                "arn:aws:s3:::proyecto-hao/json/*"
             ]
         }
     ]
