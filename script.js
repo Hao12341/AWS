@@ -27,10 +27,12 @@ fileInput.addEventListener('change', async (event) => {
     // Habilitar el botón de carga
     uploadButton.disabled = false;
 
+    // Mensaje inicial de carga
+    resultado.textContent = "Preparando para cargar la imagen...";
+
     // Subir la imagen a S3 cuando se haga clic en el botón de cargar
     uploadButton.addEventListener('click', async () => {
-        const formData = new FormData();
-        formData.append('file', file, file.name);
+        resultado.textContent = "Subiendo imagen a S3...";
 
         try {
             // Subir la imagen a la carpeta "images/" del bucket de S3
@@ -46,23 +48,37 @@ fileInput.addEventListener('change', async (event) => {
             });
 
             if (response.ok) {
-                alert("Imagen subida correctamente!");
+                resultado.textContent = "Imagen subida correctamente. Esperando que Lambda genere el archivo JSON...";
 
-                // Esperar el nombre del archivo JSON generado por la Lambda
+                // Esperar a que el archivo JSON se genere y se cargue en S3
                 const jsonUrl = `https://proyecto-hao.s3.amazonaws.com/${jsonPrefix}${fileName}.json`;
 
-                // Esperar a que se genere el JSON y mostrar el resultado
-                const jsonResponse = await fetch(jsonUrl);
-                if (!jsonResponse.ok) throw new Error("No se encontró el archivo JSON");
+                // Intentar obtener el JSON con reintentos si no está disponible inmediatamente
+                let attempts = 0;
+                let jsonResponse;
+                while (attempts < 5) {
+                    jsonResponse = await fetch(jsonUrl);
+                    if (jsonResponse.ok) {
+                        const jsonData = await jsonResponse.json();
+                        resultado.textContent = "Archivo JSON generado y recuperado correctamente!";
+                        resultado.textContent += "\n" + JSON.stringify(jsonData, null, 2); // Mostrar el resultado en formato bonito
+                        break;
+                    } else {
+                        attempts++;
+                        resultado.textContent = `Esperando respuesta del JSON... Intento ${attempts}/5`;
+                        await new Promise(resolve => setTimeout(resolve, 5000)); // Esperar 5 segundos antes de intentar de nuevo
+                    }
+                }
 
-                const jsonData = await jsonResponse.json();
-                resultado.textContent = JSON.stringify(jsonData, null, 2); // Mostrar el resultado en formato bonito
+                if (!jsonResponse.ok) {
+                    resultado.textContent = '❌ El archivo JSON no está disponible todavía después de varios intentos.';
+                }
 
             } else {
-                alert("Error al subir la imagen");
+                resultado.textContent = "❌ Error al subir la imagen a S3.";
             }
         } catch (error) {
-            alert("Error al cargar la imagen o al obtener el JSON: " + error.message);
+            resultado.textContent = "❌ Error al cargar la imagen o al obtener el JSON: " + error.message;
         }
     });
 });
