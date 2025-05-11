@@ -65,19 +65,26 @@ fileInput.addEventListener('change', async (event) => {
                         break;
                     } else {
                         attempts++;
+                        if (jsonResponse.status === 403) {
+                            resultado.textContent = `❌ Error 403: Acceso denegado al archivo JSON. Verifica las políticas de permisos en S3.`;
+                            break;
+                        }
                         resultado.textContent = `Esperando respuesta del JSON... Intento ${attempts}/5`;
                         await new Promise(resolve => setTimeout(resolve, 5000)); // Esperar 5 segundos antes de intentar de nuevo
                     }
                 }
 
                 if (!jsonResponse.ok) {
-                    resultado.textContent = '❌ El archivo JSON no está disponible todavía después de varios intentos.';
+                    if (jsonResponse.status !== 403) {
+                        resultado.textContent = '❌ El archivo JSON no está disponible todavía después de varios intentos. Puede que Lambda aún no lo haya generado.';
+                    }
                 }
 
             } else {
                 resultado.textContent = "❌ Error al subir la imagen a S3.";
             }
         } catch (error) {
+            // Manejo de errores generales
             resultado.textContent = "❌ Error al cargar la imagen o al obtener el JSON: " + error.message;
         }
     });
